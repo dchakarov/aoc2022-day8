@@ -13,27 +13,69 @@ func main() {
     let lines = inputString.components(separatedBy: "\n")
         .filter { !$0.isEmpty }
     
-    // Sample algorithm
-    var scoreboard = [String: Int]()
+    var trees = [[Int]]()
+    var treeVisibility = [[Bool]]()
+
     lines.forEach { line in
-        let (name, score) = parseLine(line)
-        scoreboard[name] = score
+        let a = Array(line)
+        trees.append(a.map { Int(String($0))! })
+        treeVisibility.append(a.map { _ in true })
     }
-    scoreboard
-        .sorted { lhs, rhs in
-            lhs.value > rhs.value
+    
+    for i in 1..<trees.count-1 {
+        for j in 1..<trees[0].count-1 {
+            treeVisibility[i][j] = isVisible(i: i, j: j, trees: trees, treeVisibility: treeVisibility)
         }
-        .forEach { name, score in
-            print("\(name) \(score) pts")
-        }
+    }
+    
+    let visibleTrees = treeVisibility.flatMap { $0 }.reduce(into: 0) { partialResult, current in
+        partialResult += current ? 1 : 0
+    }
+    
+    print(visibleTrees)
 }
 
-func parseLine(_ line: String) -> (name: String, score: Int) {
-    let helper = RegexHelper(pattern: #"([\-\w]*)\s(\d+)"#)
-    let result = helper.parse(line)
-    let name = result[0]
-    let score = Int(result[1])!
-    return (name: name, score: score)
+func isVisible(i: Int, j: Int, trees: [[Int]], treeVisibility: [[Bool]]) -> Bool {
+    let tree = trees[i][j]
+    var visible = true
+    for k in 0..<i {
+        if trees[k][j] >= tree {
+            visible = false
+            continue
+        }
+    }
+    if visible { return true }
+    
+    visible = true
+    for k in i+1..<trees.count {
+        if trees[k][j] >= tree {
+            visible = false
+            continue
+        }
+    }
+    if visible { return true }
+    
+    visible = true
+    for k in 0..<j {
+        if trees[i][k] >= tree {
+            visible = false
+            continue
+        }
+    }
+    if visible { return true }
+    
+    visible = true
+    for k in j+1..<trees.count {
+        if trees[i][k] >= tree {
+            visible = false
+            continue
+        }
+    }
+    
+    return visible
 }
 
+let startTime = Date()
 main()
+let timeElapsed = Date().timeIntervalSince(startTime) * 1000
+print("elapsed: \(timeElapsed)ms")
